@@ -154,7 +154,7 @@ local function SetupCharacter(Child)
 
 		GunUIHandler.Update(GunUI, CurrentWeapon)
 		GunUI.Parent = Player.PlayerGui
-		
+
 		PlayerState:SetState({"CanShoot", "CanReload"}, {true, true})
 
 		CurrentWeapon.State = PlayerState
@@ -280,55 +280,53 @@ local function Shoot()
 	local tpAnims = CurrentWeapon.ThirdPersonAnimations
 
 	if vmAnims then
-		if vmAnims[2] then pcall(function() vmAnims[2]:Play() if PlayerState:GetState("IsAiming") == true then vmAnims[2]:AdjustWeight(0.1) end end) end
-		if vmAnims.ShootProjectile then pcall(function() vmAnims.ShootProjectile:Play() end) end
+		if vmAnims[2] then vmAnims[2]:Play() if PlayerState:GetState("IsAiming") == true then vmAnims[2]:AdjustWeight(0.1) end end
+		if vmAnims.ShootProjectile then vmAnims.ShootProjectile:Play() end
 	end
 
-	if tpAnims and tpAnims[2] then pcall(function() tpAnims[2]:Play() end) end
+	if tpAnims and tpAnims[2] then tpAnims[2]:Play() end
 
 	if CurrentWeapon.Viewmodel then
-		pcall(function()
-			local vm = CurrentWeapon.Viewmodel
-			if vm:FindFirstChild("HumanoidRootPart") and vm.HumanoidRootPart:FindFirstChild("Sounds") and vm.HumanoidRootPart.Sounds:FindFirstChild("Shoot") then
-				vm.HumanoidRootPart.Sounds.Shoot:Play()
-			end
-			if vm:FindFirstChild("Joint") and vm.Joint:FindFirstChild("Muzzle") and vm.Joint.Muzzle:FindFirstChild("Fire") then
-				vm.Joint.Muzzle.Fire:Emit(100)
-			end
-		end)
+		local vm = CurrentWeapon.Viewmodel
+		if vm:FindFirstChild("HumanoidRootPart") and vm.HumanoidRootPart:FindFirstChild("Sounds") and vm.HumanoidRootPart.Sounds:FindFirstChild("Shoot") then
+			vm.HumanoidRootPart.Sounds.Shoot:Play()
+		end
+		if vm:FindFirstChild("Joint") and vm.Joint:FindFirstChild("Muzzle") and vm.Joint.Muzzle:FindFirstChild("Fire") then
+			vm.Joint.Muzzle.Fire:Emit(100)
+		end
 	end
 
 	if CurrentWeapon.Recoil then
-		RecoilHandler.recoil(CurrentWeapon.Recoil)
+	RecoilHandler.recoil(CurrentWeapon.Recoil)
+end
+
+CurrentWeapon:RemoveBullets(CurrentWeapon.BulletsPerShoot or 1)
+
+GunUIHandler.Update(GunUI, CurrentWeapon)
+
+local origin = Camera.CFrame.Position
+local direction = Camera.CFrame.LookVector
+
+task.spawn(function()
+	local Result = BulletHandler.Shoot(CurrentWeapon, origin, direction)
+
+	print(Result)
+end)
+
+task.delay(CurrentWeapon.ShootCooldown or 0.12, function()
+	if PlayerState then
+		PlayerState:SetState("CanShoot", true)
 	end
-
-	CurrentWeapon:RemoveBullets(CurrentWeapon.BulletsPerShoot or 1)
-
-	GunUIHandler.Update(GunUI, CurrentWeapon)
-
-	local origin = Camera.CFrame.Position
-	local direction = Camera.CFrame.LookVector
-	
-	task.spawn(function()
-		local Result = BulletHandler.Shoot(CurrentWeapon, origin, direction)
-		
-		print(Result)
-	end)
-
-	task.delay(CurrentWeapon.ShootCooldown or 0.12, function()
-		if PlayerState then
-			PlayerState:SetState("CanShoot", true)
-		end
-	end)
+end)
 end
 
 local function Reload()
 	if not CurrentWeapon 
-   or not CurrentWeapon.Viewmodel 
-   or PlayerState:GetState("CanReload") ~= true 
-   or CurrentWeapon.Bullets >= CurrentWeapon.WeaponData.Data.Bullets 
-   or CurrentWeapon.ReservedBullets <= 0 then
-   return end
+		or not CurrentWeapon.Viewmodel 
+		or PlayerState:GetState("CanReload") ~= true 
+		or CurrentWeapon.Bullets >= CurrentWeapon.WeaponData.Data.Bullets 
+		or CurrentWeapon.ReservedBullets <= 0 then
+		return end
 
 	PlayerState:SetState("CanReload", false)
 	PlayerState:SetState("CanShoot", false)
@@ -341,7 +339,7 @@ local function Reload()
 	if CurrentWeapon.TypeOfGun == 1 or CurrentWeapon.TypeOfGun == 2 then
 		if ViewmodelAnims[3] then ViewmodelAnims[3]:Play() end
 		if ThirdPersonAnims[3] then ThirdPersonAnims[3]:Play() end
-		
+
 		if SoundsFolder and SoundsFolder:FindFirstChild("Reload") then
 			SoundsFolder.Reload:Play()
 		end
@@ -433,7 +431,7 @@ InputHandler.Register({
 	[Enum.UserInputType.MouseButton1] = {
 		pressed = function()
 			if not CurrentWeapon then return end
-			
+
 			if CurrentWeapon.TypeOfGun == 1 then
 				PlayerState:SetState("IsShooting", true)
 
