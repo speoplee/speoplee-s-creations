@@ -299,12 +299,12 @@ local function Shoot()
 	end
 
 	if CurrentWeapon.Recoil then
-		pcall(function() RecoilHandler.recoil(CurrentWeapon.Recoil) end)
+		RecoilHandler.recoil(CurrentWeapon.Recoil)
 	end
 
 	CurrentWeapon:RemoveBullets(CurrentWeapon.BulletsPerShoot or 1)
 
-	pcall(function() GunUIHandler.Update(GunUI, CurrentWeapon) end)
+	GunUIHandler.Update(GunUI, CurrentWeapon)
 
 	local origin = Camera.CFrame.Position
 	local direction = Camera.CFrame.LookVector
@@ -489,4 +489,5 @@ Character.Humanoid.Died:Connect(function()
 	if CurrentWeapon then
 		OnGunDesequipped(true)
 	end
+
 end)
